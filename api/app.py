@@ -43,19 +43,55 @@ def get_emetteurs():
     for i in range(len(emetteurs)):
         emetteurs[i]["_links"] = [
             {
-                "href": "/emetteurs/" + urllib.parse.quote(pays[i]["nom"]),
+                "href": "/emetteurs/" + urllib.parse.quote(emetteurs[i]["nom"]),
                 "rel": "self"
             },
             {
-                "href": "/emetteurs/" + urllib.parse.quote(pays[i]["nom"]) + "/mailboxes",
+                "href": "/emetteurs/" + urllib.parse.quote(emetteurs[i]["nom"]) + "/mailboxes",
                 "rel": "mailboxes"
             },
             {
-                "href": "/emetteurs/" + urllib.parse.quote(pays[i]["nom"]) + "/mails",
+                "href": "/emetteurs/" + urllib.parse.quote(emetteurs[i]["nom"]) + "/mails",
                 "rel": "mails"
             }
         ]
     return jsonify(emetteurs), 200
+
+@app.route('/emetteurs/<string:nom>/mails')
+def get_mailboxes_for_emetteur(nom: str):
+    """Récupère les mailboxes d'un emetteur"""
+    mailboxes = execute_query("""select mailboxes.nom, emetteurs.nom
+                                    from mailboxes
+                                    join emetteurs on mailboxes.emetteur_id = emetteurs.id
+                                    where lower(emetteurs.nom) = ?""", (urllib.parse.unquote(nom.lower()),))
+    if mailboxes == []:
+        abort(404, "Aucune région dans cet emetteurs")
+    # ajout de _links à chaque dico mailbox
+    for i in range(len(mailboxes)):
+        mailboxes[i]["_links"] = [{
+            "href": "/mailboxes/" + mailboxes[i]["nom"],
+            "rel": "self"
+        }]
+    return jsonify(mailboxes), 200
+
+@app.route('/emetteurs/<string:nom>/mailboxes')
+def get_mails_for_emetteur(nom: str):
+    """Récupère les mails d'un emetteur"""
+    mails = execute_query("""select mails.nom, emetteurs.nom
+                                    from mails
+                                    join emetteurs on mails.emetteur_id = emetteurs.id
+                                    where lower(emetteurs.nom) = ?""", (urllib.parse.unquote(nom.lower()),))
+    if mails == []:
+        abort(404, "Aucune région dans cet emetteurs")
+    # ajout de _links à chaque dico mailbox
+    for i in range(len(mails)):
+        mails[i]["_links"] = [{
+            "href": "/mails/" + mails[i]["nom"],
+            "rel": "self"
+        }]
+    return jsonify(mails), 200
+
+
 
 # we define the route /
 @app.route('/')
