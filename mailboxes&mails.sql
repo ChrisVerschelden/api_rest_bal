@@ -1,44 +1,54 @@
-CREATE TABLE `pays` (
-  `id` int(11) NOT NULL,
+
+##### emetteurs
+
+CREATE TABLE `emetteurs` (
+  `id` int(11) PRIMARY KEY NOT NULL AUTO_INCREMENT,
   `nom` varchar(255) CHARACTER SET utf8mb3 NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-ALTER TABLE `pays`
-  ADD PRIMARY KEY (`id`);
+ALTER TABLE `emetteurs`
   ADD UNIQUE KEY `nom` (`nom`);
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-  
 
+INSERT INTO `emetteurs` (`nom`) VALUES
+  ("admin_mailbox");
+##### mailboxes
 
-INSERT INTO `pays` (`id`, `nom`) VALUES
-(1, "france");
-
-ALTER TABLE `regions`
-  ADD `pays_id` int(11),
-  ADD KEY `pays_id` (`pays_id`);
-
-UPDATE `regions` SET pays_id = 1;
-
-ALTER TABLE `regions`
-  ADD CONSTRAINT `regions_ibfk_1` FOREIGN KEY (`pays_id`) REFERENCES `pays` (`id`);
-
-
-CREATE TABLE `villes` (
-  `id` int(11) NOT NULL,
-  `code` int(11) NOT NULL,
+CREATE TABLE `mailboxes` (
+  `id` int(11) PRIMARY KEY NOT NULL AUTO_INCREMENT,
   `nom` varchar(255) CHARACTER SET utf8mb3 NOT NULL,
-  `departement_id` int(11) NOT NULL
+  `emetteur_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-ALTER TABLE `villes`
-  ADD PRIMARY KEY `id` (`id`),
-  ADD UNIQUE KEY `code` (`code`),
-  ADD UNIQUE KEY `nom` (`nom`),
-  ADD KEY (`departement_id`);
+INSERT INTO `mailboxes` (`nom`, `emetteur_id`) VALUES
+  ("admin_mailbox", 1);
 
-INSERT INTO `villes` VALUES
-(1, 66000, "perpignan", 12);
+ALTER TABLE `mailboxes`
+  ADD UNIQUE KEY `nom` (`nom`);
+  ADD KEY (`emetteur_id`);
 
-ALTER TABLE `villes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-  ADD CONSTRAINT `villes_ibfk_1` FOREIGN KEY (`departement_id`) REFERENCES `departements` (`id`);
+##### mails
+
+CREATE TABLE `mails` (
+  `id` int(11) PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `read` BOOLEAN NOT NULL,
+  `title` varchar(255) CHARACTER SET utf8mb3 NOT NULL,
+  `message` LONGTEXT CHARACTER SET utf8mb3 NOT NULL,
+  `emetteur_id` int(11) NOT NULL,
+  `mailboxe_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `mails` VALUES (`read`, `title`, `message`, `emetteur_id`, `mailboxe_id`)
+  (0, `perpignan`, `c'est une magnifique ville (non.)`, 1, 1);
+
+ALTER TABLE `mails`
+  ADD KEY (`emetteur_id`);
+  ADD KEY (`mailboxe_id`);
+
+#### ajout constraints
+
+ALTER TABLE `mails`
+  ADD CONSTRAINT `mails_ibfk_1` FOREIGN KEY (`mailboxe_id`) REFERENCES `mailboxes` (`id`);
+  ADD CONSTRAINT `mails_ibfk_2` FOREIGN KEY (`emetteur_id`) REFERENCES `emetteurs` (`id`);
+
+ALTER TABLE `mailboxes`
+  ADD CONSTRAINT `mails_ibfk_1` FOREIGN KEY (`emetteur_id`) REFERENCES `emetteurs` (`id`);
