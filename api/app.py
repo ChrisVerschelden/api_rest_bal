@@ -57,7 +57,7 @@ def get_emetteurs():
         ]
     return jsonify(emetteurs), 200
 
-@app.route('/emetteurs/<string:nom>/mails')
+@app.route('/emetteurs/<string:nom>/mailboxes')
 def get_mailboxes_for_emetteur(nom: str):
     """Récupère les mailboxes d'un emetteur"""
     mailboxes = execute_query("""select mailboxes.nom, emetteurs.nom
@@ -74,10 +74,10 @@ def get_mailboxes_for_emetteur(nom: str):
         }]
     return jsonify(mailboxes), 200
 
-@app.route('/emetteurs/<string:nom>/mailboxes')
+@app.route('/emetteurs/<string:nom>/mails')
 def get_mails_for_emetteur(nom: str):
     """Récupère les mails d'un emetteur"""
-    mails = execute_query("""select mails.nom, emetteurs.nom
+    mails = execute_query("""select mails.read, mails.title, mails.message, emetteurs.nom
                                     from mails
                                     join emetteurs on mails.emetteur_id = emetteurs.id
                                     where lower(emetteurs.nom) = ?""", (urllib.parse.unquote(nom.lower()),))
@@ -91,6 +91,20 @@ def get_mails_for_emetteur(nom: str):
         }]
     return jsonify(mails), 200
 
+
+@app.route('/emetteurs', methods=['POST'])
+def post_emetteurs():
+    """"Ajoute un emetteurs"""
+    nom = request.args.get("nom")
+    execute_query("insert into emetteurs (nom) values (?)", (nom,))
+    # on renvoi le lien de l'emetteur que l'on vient de créer
+    reponse_json = jsonify({
+        "_links": [{
+            "href": "/emetteurs/" + urllib.parse.quote(nom),
+            "rel": "self"
+        }]
+    })
+    return reponse_json, 201  # created
 
 
 # we define the route /
