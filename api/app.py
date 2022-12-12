@@ -35,12 +35,36 @@ def execute_query(query, data=()):
         conn.commit()
         return cur.lastrowid
 
+@app.route('/emetteurs')
+def get_emetteurs():
+    """recupère la liste des emetteurs"""
+    emetteurs = execute_query("select nom from emetteurs")
+    # ajout de _links à chaque dico région
+    for i in range(len(emetteurs)):
+        emetteurs[i]["_links"] = [
+            {
+                "href": "/emetteurs/" + urllib.parse.quote(pays[i]["nom"]),
+                "rel": "self"
+            },
+            {
+                "href": "/emetteurs/" + urllib.parse.quote(pays[i]["nom"]) + "/mailboxes",
+                "rel": "mailboxes"
+            },
+            {
+                "href": "/emetteurs/" + urllib.parse.quote(pays[i]["nom"]) + "/mails",
+                "rel": "mails"
+            }
+        ]
+    return jsonify(emetteurs), 200
 
 # we define the route /
 @app.route('/')
 def welcome():
     liens = [{}]
-    liens[0]["_links"] = []
+    liens[0]["_links"] = [{
+        "href": "/emetteurs",
+        "rel": "emetteurs"
+    }]
     return jsonify(liens), 200
 
 
